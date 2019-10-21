@@ -35,9 +35,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v1
     - uses: kgrubb/release-action@master
-      if: github.event.pull_request.merged == true && github.event.pull_request.labels.includes('release')
+      if: github.event.pull_request.merged == true && github.event.pull_request.labels.includes('Release')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -52,9 +52,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v1
     - uses: kgrubb/release-action@master
-      if: github.event.pull_request.merged == true && github.event.pull_request.labels.includes('release')
+      if: github.event.pull_request.merged == true && github.event.pull_request.labels.includes('Release')
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:

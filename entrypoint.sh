@@ -68,9 +68,8 @@ echo -e "\n\033[1;32mA new github release tag has been created!\033[0m\n"
 # Update Debian Changelog #
 #-------------------------#
 
-# make sure we are up to date on the master branch
-git checkout master
-git reset --hard origin/master
+# make sure we are in sync with HEAD
+git reset --hard HEAD
 
 # get all commit subjects since last tag
 COMMITS="$(git log "$(git describe --tags "$(git rev-list --tags --max-count=1)")"..HEAD --pretty="format:%s")"
@@ -117,9 +116,9 @@ echo -e "\n\033[1;32mChangelogs have been pushed to deb-packaging!\033[0m\n"
 # Deploy to stable #
 #------------------#
 
-# make sure we are up to date on the master branch before rebasing stable
-git checkout master
-git reset --hard origin/master
+# point head back to what it was before checking out deb-packaging
+git checkout -
+git reset --hard HEAD
 
 # checkout or create stable branch
 if ! git show-ref --verify --quiet refs/heads/"$RELEASE_BRANCH"; then
