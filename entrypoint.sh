@@ -3,7 +3,6 @@ set -e
 
 # if a custom token is provided, use it instead of the default github token.
 if [ -n "$GIT_USER_TOKEN" ]; then
-  echo "git user token exists, using it instead of default github token."
   GITHUB_TOKEN="$GIT_USER_TOKEN"
 fi
 
@@ -16,12 +15,12 @@ if [ -z "$1" ]; then
 else
   RELEASE_BRANCH="$1"
 fi
-# default email and username to elementaryBot
+# default email and username to github actions user
 if [ -z "$GIT_USER_EMAIL" ]; then
-  GIT_USER_EMAIL="builds@elementary.io"
+  GIT_USER_EMAIL="action@github.com"
 fi
 if [ -z "$GIT_USER_NAME" ]; then
-  GIT_USER_NAME="elementaryBot"
+  GIT_USER_NAME="GitHub Action"
 fi
 
 # make sure branches are up-to-date
@@ -88,7 +87,7 @@ echo -e "\n\033[1;32mA new github release tag has been created!\033[0m\n"
 git reset --hard HEAD
 
 # get all commit subjects since last tag
-COMMITS="$(git log "$(git describe --tags "$(git rev-list --tags --max-count=1)")"..HEAD --pretty="format:%s")"
+COMMITS="$(git log "$(git tag -l '*-debian' | tail -n1 | cut -d'-' -f 1)"..HEAD --pretty="format:%s")"
 # filter out commits involving translations and commits that don't have a related merge number
 FILTERED_COMMITS="$(echo "$COMMITS" | awk '!/Weblate/' | awk '!/weblate/' | grep '(#')"
 
