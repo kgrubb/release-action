@@ -87,9 +87,18 @@ echo -e "\n\033[1;32mA new github release tag has been created!\033[0m\n"
 git reset --hard HEAD
 
 # get all commit subjects since last tag
-COMMITS="$(git log "$(git tag -l '*-debian' | tail -n1 | cut -d'-' -f 1)"..HEAD --pretty="format:%s")"
+LAST_VERSION_TAG="$(git tag -l | grep -v 'debian' | tail -n1 )"
+COMMITS="$(git log "$LAST_VERSION_TAG"..HEAD --pretty="format:%s")"
+
 # filter out commits involving translations and commits that don't have a related merge number
-FILTERED_COMMITS="$(echo "$COMMITS" | awk '!/Weblate/' | awk '!/weblate/' | grep '(#')"
+if [[ "$COMMITS" == *"Weblate"* ]]; then
+  FILTERED_COMMITS="$(echo "$COMMITS" | awk '!/Weblate/' | grep '(#')"
+  if [[ "$FILTERED_COMMITS" == *"weblate"* ]]; then
+    FILTERED_COMMITS="$(echo "$FILTERED_COMMITS" | awk '!/weblate/' | grep '(#')"
+  fi
+else
+  FILTERED_COMMITS="$(echo "$COMMITS" | grep '(#')"
+fi
 
 # move to the debian packaging branch
 if ! git checkout deb-packaging; then
