@@ -46,6 +46,7 @@ APPDATA="$(basename "$(find data -name "*appdata*")")"
 VERSION="$(xmlstarlet sel -t -v '//release[1]//@version' -n data/"$APPDATA")"
 echo "Version: $VERSION"
 
+# get the last version tag before we create a new one!
 PREVIOUS_VERSION="$(git tag -l | grep -v 'debian' | tail -n1 )"
 
 # get the release notes, remove any empty lines & padded spacing
@@ -86,6 +87,7 @@ echo -e "\n\033[1;32mA new github release tag has been created!\033[0m\n"
 #-------------------------#
 
 # make sure we are in sync with HEAD
+echo "sync with HEAD"
 git reset --hard HEAD
 
 # get all commit subjects since previous version tag
