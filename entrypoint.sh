@@ -46,6 +46,8 @@ APPDATA="$(basename "$(find data -name "*appdata*")")"
 VERSION="$(xmlstarlet sel -t -v '//release[1]//@version' -n data/"$APPDATA")"
 echo "Version: $VERSION"
 
+PREVIOUS_VERSION="$(git tag -l | grep -v 'debian' | tail -n1 )"
+
 # get the release notes, remove any empty lines & padded spacing
 RELEASE_NOTE_RAW="$(xmlstarlet sel -t -v '//release[1]' -n data/"$APPDATA"| awk 'NF'| awk '{$1=$1}1')"
 # replace quotes with commented quotes to prevent breakage in github release note string
@@ -86,12 +88,13 @@ echo -e "\n\033[1;32mA new github release tag has been created!\033[0m\n"
 # make sure we are in sync with HEAD
 git reset --hard HEAD
 
-# get all commit subjects since last tag
-LAST_VERSION_TAG="$(git tag -l | grep -v 'debian' | tail -n1 )"
-COMMITS="$(git log "$LAST_VERSION_TAG"..HEAD --pretty="format:%s")"
-
+# get all commit subjects since previous version tag
+COMMITS="$(git log "$PREVIOUS_VERSION"..HEAD --pretty="format:%s")"
 # filter out commits involving translations and commits that don't have a related merge number
 FILTERED_COMMITS="$(echo "$COMMITS" | grep -v 'Weblate' | grep -v 'weblate' | grep '(#')"
+
+echo "Debian Changelog Content:"
+echo -e "$FILTERED_COMMITS\n"
 
 # move to the debian packaging branch
 if ! git checkout deb-packaging; then
