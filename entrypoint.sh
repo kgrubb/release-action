@@ -91,9 +91,13 @@ echo "sync with HEAD"
 git reset --hard HEAD
 
 # get all commit subjects since previous version tag
+echo "start fetching commits"
 COMMITS="$(git log "$PREVIOUS_VERSION"..HEAD --pretty="format:%s")"
+echo "got commits"
 # filter out commits involving translations and commits that don't have a related merge number
+echo "filter commits"
 FILTERED_COMMITS="$(echo "$COMMITS" | grep -v 'Weblate' | grep -v 'weblate' | grep '(#')"
+echo "got filtered commits"
 
 echo "Debian Changelog Content:"
 echo -e "$FILTERED_COMMITS\n"
