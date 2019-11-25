@@ -60,8 +60,10 @@ echo -e "$RELEASE_NOTES_SANITIZED\n"
 # Create Github Release #
 #-----------------------#
 
+# replace newlines with a newline character
+MARKDOWN_NOTES="$(echo "$RELEASE_NOTES_SANITIZED" | awk '{printf "%s\\n", $0}')"
 # add the project name and version to release note
-GITHUB_RELEASE_NOTE="$PROJECT $VERSION is out! \n\nChanges:\n\n$RELEASE_NOTES_SANITIZED"
+GITHUB_RELEASE_NOTE="$PROJECT $VERSION is out! \n\nChanges:\n\n$MARKDOWN_NOTES"
 DATA="
 {
   \"tag_name\": \"$VERSION\",
