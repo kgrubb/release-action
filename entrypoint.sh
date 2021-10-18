@@ -50,9 +50,9 @@ echo "Version: $VERSION"
 PREVIOUS_VERSION="$(git tag -l | grep -v 'debian' | tail -n1 )"
 
 # get the release notes, remove any empty lines & padded spacing
-RELEASE_NOTES_RAW="$(xmlstarlet sel -t -m '//release[1]/description/*' -n -c '.' -n data/"$APPDATA" | awk 'NF' | awk '{$1=$1}1')"
+RELEASE_NOTE_RAW="$(xmlstarlet sel -t -m '//release[1]/description/*' -n -c '.' -n data/"$APPDATA" | awk 'NF' | awk '{$1=$1}1')"
 # replace quotes with commented quotes to prevent breakage in github release note string
-RELEASE_NOTES_SANITIZED="${RELEASE_NOTES_RAW//\"/\\\"}"
+RELEASE_NOTES_SANITIZED="${RELEASE_NOTE_RAW//\"/\\\"}"
 echo "Release Note Content:"
 echo -e "$RELEASE_NOTES_SANITIZED\n"
 
@@ -60,10 +60,8 @@ echo -e "$RELEASE_NOTES_SANITIZED\n"
 # Create Github Release #
 #-----------------------#
 
-# replace newlines with a newline character
-MARKDOWN_NOTES="$(echo "$RELEASE_NOTES_SANITIZED" | awk '{printf "%s\\n", $0}')"
-# add the project name and version to release note
-GITHUB_RELEASE_NOTE="$PROJECT $VERSION is out! \n\nChanges:\n\n$MARKDOWN_NOTES"
+# replace newlines with a newline character & add the project name and version to release note
+GITHUB_RELEASE_NOTE="$(echo "$RELEASE_NOTES_SANITIZED" | awk '{printf "%s\\n", $0}')"
 DATA="
 {
   \"tag_name\": \"$VERSION\",
@@ -76,7 +74,7 @@ DATA="
 "
 
 # push the release content to github!
-if ! curl --data "$DATA" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases?access_token="$GITHUB_TOKEN"; then
+if ! curl -H "Authorization: token $GITHUB_TOKEN" --data "$DATA" https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases; then
   echo "\033[0;31mERROR: Unable to post github release tag information!\033[0m"  && exit 1
 fi
 echo -e "\n\033[1;32mA new github release tag has been created!\033[0m\n"
@@ -90,8 +88,8 @@ git reset --hard HEAD
 
 # get all commit subjects since previous version tag
 COMMITS="$(git log "$PREVIOUS_VERSION"..HEAD --pretty="format:%s")"
-# filter out commits involving translations and commits that don't have a related merge number
-FILTERED_COMMITS="$(echo "$COMMITS" | grep -v 'Weblate' | grep -v 'weblate')"
+# filter out commits involving translations, commits that don't have a related merge number, duplicate commits and commits of type 'Update file.ext'
+FILTERED_COMMITS="$(echo "$COMMITS" | grep -v 'Weblate' | grep -v 'weblate' | awk '!seen[$0]++' | sed -E '/^Update\ \S+\.\S+$/d')"
 
 echo "Debian Changelog Content:"
 echo -e "$FILTERED_COMMITS\n"
@@ -140,6 +138,9 @@ echo -e "\n\033[1;32mChangelogs have been pushed to deb-packaging!\033[0m\n"
 git checkout -
 git reset --hard HEAD
 
+# get default branch, see: https://davidwalsh.name/get-default-branch-name
+DEFAULT_BRANCH="$(git remote show origin | grep 'HEAD branch' | cut -d' ' -f5)"
+
 # checkout or create stable branch
 if ! git show-ref --verify --quiet refs/heads/"$RELEASE_BRANCH"; then
   git checkout -b "$RELEASE_BRANCH"
@@ -147,9 +148,9 @@ else
   git checkout "$RELEASE_BRANCH"
 fi
 
-# rebase off of master & push to remote
-if ! git rebase origin/master; then
-  echo "\033[0;31mERROR: Unable to merge master into $RELEASE_BRANCH!\033[0m" && exit 1
+# rebase off of default branch & push to remote
+if ! git rebase origin/"$DEFAULT_BRANCH"; then
+  echo "\033[0;31mERROR: Unable to merge default branch $DEFAULT_BRANCH into $RELEASE_BRANCH!\033[0m" && exit 1
 fi
 if ! git push origin "$RELEASE_BRANCH" --force-with-lease; then
   echo "\033[0;31mERROR: Unable to push changes to the $RELEASE_BRANCH branch!\033[0m" && exit 1
