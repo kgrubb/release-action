@@ -74,7 +74,7 @@ DATA="
 "
 
 # push the release content to github!
-if ! curl --fail -X POST https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases -H "Accept: application/vnd.github.v3+json" -H "Authorization: token $GITHUB_TOKEN" -H "Content-Type: application/json" -d "$DATA"; then
+if ! curl --fail -X POST https://api.github.com/repos/"$GITHUB_REPOSITORY"/releases -H "authorization: Bearer $GITHUB_TOKEN" -H 'content-type: application/json' --data "$DATA"; then
   echo "\033[0;31mERROR: Unable to post github release tag information!\033[0m"  && exit 1
 fi
 echo -e "\n\033[1;32mA new github release tag has been created!\033[0m\n"
